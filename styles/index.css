@@ -13,13 +13,11 @@ span, p{
 }
 
 .main{
-    background-image: url("../assets/EarnestNastyChinchilla.webp");
-
+    background-image: url("../assets/ezgif-1-ba822210d2.webp");
     height: 100vh;
-
     background-position: center;
-    background-size: cover;
     overflow: auto;
+    background-repeat: round;
 }
 
 .title-bg {
