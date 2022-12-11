@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="./styles/index.css">
+    <link rel="stylesheet" href="./styles/wheel.css">
+    </head>                                                                     
+    <body class="main">
+        <div>
+        <div class="title-bg">
+            <h1 class="title">🎄🎅🎁 SORTEIO NATALINO🎄🎅🎁</h1>
+        </div>  
+
+        <div class="content" id="result">
+            <h1>VOCÊ GANHOU UM VALE SHEIN DE</h1>
+            <h1>R$ 120.00</h1>
+        </div>
+
+        <div class="wheel-main">
+            <div class="deal-wheel">
+                <img class="cap" src="./assets/mouse.png" />
+                <ul class="spinner"></ul>
+                <div class="ticker"></div>
+                <button class="btn-spin">RODAR A ROLETA</button>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <img src="./assets/200w.gif" class="footer-img">
+            <img src="./assets/SharpAmbitiousCollardlizard-size_restricted.gif" class="footer-img">
+            <img src="./assets/lilica.gif" class="footer-img">
+            <img src="./assets/internet.gif" class="footer-img">
+            <img src="./assets/radical.gif" class="footer-img">
+        </footer>
+        </div>
+    </body>
+    <script>
+
+        /**
+     * Prize data will space out evenly on the deal wheel based on the amount of items available.
+     * @param text [string] name of the prize
+     * @param color [string] background color of the prize
+     * @param reaction ['resting' | 'dancing' | 'laughing' | 'shocked'] Sets the reaper's animated reaction
+     */
+        const prizes = [
+            {
+                text: "Meias",
+                color: "hsl(197 30% 43%)",
+                reaction: "dancing"
+            },
+            {
+                text: "Abraço apertado",
+                color: "hsl(173 58% 39%)",
+                reaction: "shocked"
+            },
+            {
+                text: "Caneca",
+                color: "hsl(43 74% 66%)",
+                reaction: "shocked"
+            },
+            {
+                text: "Rodizio de pizza",
+                color: "hsl(27 87% 67%)",
+                reaction: "shocked"
+            },
+            {
+                text: "Lavar louça",
+                color: "hsl(12 76% 61%)",
+                reaction: "dancing"
+            },
+            {
+                text: "par de chinela",
+                color: "hsl(350 60% 52%)",
+                reaction: "laughing"
+            },
+            {
+                text: "Spa Day",
+                color: "hsl(91 43% 54%)",
+                reaction: "laughing"
+            },
+            {
+                text: "Vale SHEIN",
+                color: "hsl(140 36% 74%)",
+                reaction: "dancing"
+            }
+        ];
+
+        const wheel = document.querySelector(".deal-wheel");
+        const resultEl = document.getElementById("result");
+        const spinner = wheel.querySelector(".spinner");
+        const trigger = wheel.querySelector(".btn-spin");
+        const ticker = wheel.querySelector(".ticker");
+        const prizeSlice = 360 / prizes.length;
+        const prizeOffset = Math.floor(180 / prizes.length);
+        const spinClass = "is-spinning";
+        const selectedClass = "selected";
+        const spinnerStyles = window.getComputedStyle(spinner);
+        let tickerAnim;
+        let rotation = 0;
+        let currentSlice = 0;
+        let prizeNodes;
+
+        const createPrizeNodes = () => {
+            prizes.forEach(({ text, color, reaction }, i) => {
+                const rotation = ((prizeSlice * i) * -1) - prizeOffset;
+
+                spinner.insertAdjacentHTML(
+                    "beforeend",
+                    `<li class="prize" data-reaction=${reaction} style="--rotate: ${rotation}deg">
+            <span class="text">${text}</span>
+          </li>`
+                );
+            });
+        };
+
+        const createConicGradient = () => {
+            spinner.setAttribute(
+                "style",
+                `background: conic-gradient(
+          from -90deg,
+          ${prizes
+                    .map(({ color }, i) => `${color} 0 ${(100 / prizes.length) * (prizes.length - i)}%`)
+                    .reverse()
+                }
+        );`
+            );
+        };
+
+
+        const setupWheel = () => {
+            createConicGradient();
+            createPrizeNodes();
+            prizeNodes = wheel.querySelectorAll(".prize");
+        };
+
+        const spinertia = (min, max) => {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        };
+
+        const runTickerAnimation = () => {
+            // https://css-tricks.com/get-value-of-css-rotation-through-javascript/
+            const values = spinnerStyles.transform.split("(")[1].split(")")[0].split(",");
+            const a = values[0];
+            const b = values[1];
+            let rad = Math.atan2(b, a);
+
+            if (rad < 0) rad += (2 * Math.PI);
+
+            const angle = Math.round(rad * (180 / Math.PI));
+            const slice = Math.floor(angle / prizeSlice);
+
+            if (currentSlice !== slice) {
+                ticker.style.animation = "none";
+                setTimeout(() => ticker.style.animation = null, 10);
+                currentSlice = slice;
+            }
+
+            tickerAnim = requestAnimationFrame(runTickerAnimation);
+        };
+
+        const selectPrize = () => {
+            const selected = Math.floor(rotation / prizeSlice);
+            prizeNodes[selected].classList.add(selectedClass);
+        };
+
+        trigger.addEventListener("click", () => {
+            resultEl.style.display = "none";
+            trigger.disabled = true;
+            rotation = Math.floor(Math.random() * 360 + spinertia(2000, 5000));
+            rotation = 4316 // <== shein
+            prizeNodes.forEach((prize) => prize.classList.remove(selectedClass));
+            wheel.classList.add(spinClass);
+            spinner.style.setProperty("--rotate", rotation);
+            ticker.style.animation = "none";
+            runTickerAnimation();
+            setTimeout(() =>{
+                resultEl.style.display = "block";
+                window.scrollTo({ top: 0 });
+            },9000)
+        });
+
+        spinner.addEventListener("transitionend", () => {
+            cancelAnimationFrame(tickerAnim);
+            trigger.disabled = false;
+            trigger.focus();
+            rotation %= 360;
+            selectPrize();
+            wheel.classList.remove(spinClass);
+            spinner.style.setProperty("--rotate", rotation);
+        });
+
+        setupWheel();
+    </script>
+</html>
